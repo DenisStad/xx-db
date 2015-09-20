@@ -26,7 +26,17 @@ After that your models will have `sequelizeSchema` or `mongooseSchema` set. It w
 The last step is to call `App.load('mongoose/model')` or `App.load('sequelize/model')`.
 
 You can now use the following helpers:
-`findById`, `findOne`, `find`, `create`, `findByIdAndUpdate`, `findOneAndUpdate`, `delete`, `deleteInstance`
+* `create(obj, cb)`
+* `findById(id, cb)`,
+* `findOne(where, cb)`,
+* `find(where, cb)`,
+* `updateInstance(instance, updateObj, [options], cb)` Set `options.readonly` and `options.private` explicitly to false if you don't want to update these attributes
+* `findByIdAndUpdate(id, updateObj, [options], cb)`,
+* `findOneAndUpdate(id, updateObj, [options], cb)`,
+* `delete(where, cb)`,
+* `deleteInstance(instance, cb)`
+
+The callback is of the form `function(err, obj)`
 
 ## Data types
 ```

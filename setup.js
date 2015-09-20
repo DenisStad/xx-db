@@ -106,16 +106,61 @@ exports = module.exports = function(App, targetDB, models) {
       model.create = function(obj, cb) {
         model.Model.create(obj, cb);
       };
-      /*
-      model.update = function(instance, updates, cb) {
-        model.Model.update(instance, { $set: updates }, cb);
+      model.updateInstance = function(instance, updates, options, cb) {
+        if (!cb) {
+          cb = options;
+          options = { readonly: true, private: true };
+        }
+        for (var i in model.mongooseSchema) {
+          if (!options.readonly && model.mongooseSchema[i].readonly) {
+            continue;
+          }
+          if (!options.private && model.mongooseSchema[i].private) {
+            continue;
+          }
+          if (updates.hasOwnProperty(i)) {
+            instance[i] = updates[i];
+          }
+        }
+        instance.save(function(err) { cb(err, instance); });
       };
-      */
-      model.findByIdAndUpdate = function(id, updates, cb) {
-        model.Model.findByIdAndUpdate(id, { $set: updates }, cb);
+      model.findByIdAndUpdate = function(id, updates, options, cb) {
+        if (!cb) {
+          cb = options;
+          options = { readonly: true, private: true };
+        }
+        var updateObj = {};
+        for (var i in model.mongooseSchema) {
+          if (!options.readonly && model.mongooseSchema[i].readonly) {
+            continue;
+          }
+          if (!options.private && model.mongooseSchema[i].private) {
+            continue;
+          }
+          if (updates.hasOwnProperty(i)) {
+            updateObj[i] = updates[i];
+          }
+        }
+        model.Model.findByIdAndUpdate(id, { $set: updateObj }, cb);
       };
-      model.findOneAndUpdate = function(obj, updates, cb) {
-        model.Model.findOneAndUpdate(obj, { $set: updates }, cb);
+      model.findOneAndUpdate = function(obj, updates, options, cb) {
+        if (!cb) {
+          cb = options;
+          options = { readonly: true, private: true };
+        }
+        var updateObj = {};
+        for (var i in model.mongooseSchema) {
+          if (!options.readonly && model.mongooseSchema[i].readonly) {
+            continue;
+          }
+          if (!options.private && model.mongooseSchema[i].private) {
+            continue;
+          }
+          if (updates.hasOwnProperty(i)) {
+            updateObj[i] = updates[i];
+          }
+        }
+        model.Model.findOneAndUpdate(obj, { $set: updateObj }, cb);
       };
       model.delete = function(params, cb) {
         model.Model.remove(params, cb);
@@ -184,31 +229,70 @@ exports = module.exports = function(App, targetDB, models) {
       model.create = function(obj, cb) {
         model.Model.create(obj).then(function(instance) { cb(null, instance); }).catch(cb);
       };
-      /*
-      model.update = function(instance, updates, cb) {
-        model.Model.update(updates, ).then(function(instance) { cb(null, instance); }).catch(cb);
+      model.updateInstance = function(instance, updates, options, cb) {
+        if (!cb) {
+          cb = options;
+          options = { readonly: true, private: true };
+        }
+        for (var i in model.sequelizeSchema) {
+          if (options.readonly || model.sequelizeSchema[i].readonly) {
+            continue;
+          }
+          if (options.private || model.sequelizeSchema[i].private) {
+            continue;
+          }
+          if (updates.hasOwnProperty(i)) {
+            instance.set(i, updates[i]);
+          }
+        }
+        instance.save().then(function(instance) {
+          cb(null, instance);
+        }).catch(cb);
       };
-      */
-      model.findByIdAndUpdate = function(id, updates, cb) {
+      model.findByIdAndUpdate = function(id, updates, options, cb) {
+        if (!cb) {
+          cb = options;
+          options = { readonly: true, private: true };
+        }
         model.Model.findById(id).then(function(instance) { 
           if (!instance) {
             return cb({ message: 'instance not found' });
           }
-          for (var i in updates) {
-            instance.set(i, updates[i]);
+          for (var i in model.sequelizeSchema) {
+            if (options.readonly || model.sequelizeSchema[i].readonly) {
+              continue;
+            }
+            if (options.private || model.sequelizeSchema[i].private) {
+              continue;
+            }
+            if (updates.hasOwnProperty(i)) {
+              instance.set(i, updates[i]);
+            }
           }
           return instance.save();
         }).then(function(instance) {
           cb(null, instance);
         }).catch(cb);
       };
-      model.findOneAndUpdate = function(obj, updates, cb) {
+      model.findOneAndUpdate = function(obj, updates, options, cb) {
+        if (!cb) {
+          cb = options;
+          options = { readonly: true, private: true };
+        }
         model.Model.findOne(id).then(function(instance) { 
           if (!instance) {
             return cb({ message: 'instance not found' });
           }
-          for (var i in updates) {
-            instance.set(i, updates[i]);
+          for (var i in model.sequelizeSchema) {
+            if (options.readonly || model.sequelizeSchema[i].readonly) {
+              continue;
+            }
+            if (options.private || model.sequelizeSchema[i].private) {
+              continue;
+            }
+            if (updates.hasOwnProperty(i)) {
+              instance.set(i, updates[i]);
+            }
           }
           return instance.save();
         }).then(function(instance) {
