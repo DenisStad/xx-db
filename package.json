@@ -1,0 +1,24 @@
+{
+  "name": "xx-db",
+  "version": "1.0.0",
+  "description": "Database SCRUD wrapper for xerxes",
+  "author": "Denis Stadniczuk",
+  "license": "ISC",
+  "keywords": [
+    "xerxes",
+    "database"
+  ],
+  "files": [ "setup.js" ],
+  "main": "setup.js",
+  "scripts": {
+    "test": "node test/test.js"
+  },
+  "devDependencies": {
+    "sequelize": "^3.9.0",
+    "should": "^7.1.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/DenisStad/xx-db"
+  }
+}
