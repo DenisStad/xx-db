@@ -8,12 +8,15 @@
     "xerxes",
     "database"
   ],
-  "files": [ "convert.js" ],
+  "files": [
+    "convert.js"
+  ],
   "main": "convert.js",
   "scripts": {
     "test": "node test/test.js"
   },
   "devDependencies": {
+    "mongoose": "^4.1.8",
     "sequelize": "^3.9.0",
     "should": "^7.1.0"
   },

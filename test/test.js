@@ -1,4 +1,4 @@
-var setup = require('../setup');
+var setup = require('../convert');
 var should = require('should');
 
 var App = {

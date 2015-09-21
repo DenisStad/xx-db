@@ -93,8 +93,11 @@ exports = module.exports = function(App, targetDB, models) {
         if (value.hasOwnProperty('unique')) out.unique = value.unique;
         model.mongooseSchema[key] = out;
       }
+      var mongoose = require('mongoose');
       model.findById = function(id, cb) {
-        model.Model.findById(id, cb);
+        model.Model.findById(id, function(err) {
+          cb(arguments);
+        });
       };
       model.findOne = function(where, cb) {
         model.Model.findOne(where, cb);
