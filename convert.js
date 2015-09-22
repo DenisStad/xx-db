@@ -95,16 +95,29 @@ exports = module.exports = function(App, targetDB, models) {
       }
       var mongoose = require('mongoose');
       model.findById = function(id, cb) {
-        model.Model.findById(id, function(err) {
-          cb(arguments);
+        model.Model.findById(id, function(err, obj) {
+          if (err && err.name === 'CastError' && err.kind === 'ObjectId') {
+            return cb(null, null);
+          }
+          cb(err, obj);
         });
       };
       model.findOne = function(where, cb) {
-        model.Model.findOne(where, cb);
+        model.Model.findOne(where, function(err, obj) {
+          if (err && err.name === 'CastError' && err.kind === 'ObjectId') {
+            return cb(null, null);
+          }
+          cb(err, obj);
+        });
       };
       model.find = function(where, options, cb) {
         if (!cb) cb = options;
-        model.Model.find(where, cb);
+        model.Model.find(where, function(err, obj) {
+          if (err && err.name === 'CastError' && err.kind === 'ObjectId') {
+            return cb(null, null);
+          }
+          cb(err, obj);
+        });
       };
       model.create = function(obj, cb) {
         model.Model.create(obj, cb);
@@ -132,38 +145,21 @@ exports = module.exports = function(App, targetDB, models) {
           cb = options;
           options = { readonly: true, private: true };
         }
-        var updateObj = {};
-        for (var i in model.mongooseSchema) {
-          if (!options.readonly && model.mongooseSchema[i].readonly) {
-            continue;
-          }
-          if (!options.private && model.mongooseSchema[i].private) {
-            continue;
-          }
-          if (updates.hasOwnProperty(i)) {
-            updateObj[i] = updates[i];
-          }
-        }
-        model.Model.findByIdAndUpdate(id, { $set: updateObj }, cb);
+        model.findById(id, function(err, obj) {
+          if (err) return cb(err);
+          if (!obj) return cb(null, null);
+          model.updateInstance(obj, updates, cb);
+        });
       };
       model.findOneAndUpdate = function(obj, updates, options, cb) {
         if (!cb) {
           cb = options;
           options = { readonly: true, private: true };
         }
-        var updateObj = {};
-        for (var i in model.mongooseSchema) {
-          if (!options.readonly && model.mongooseSchema[i].readonly) {
-            continue;
-          }
-          if (!options.private && model.mongooseSchema[i].private) {
-            continue;
-          }
-          if (updates.hasOwnProperty(i)) {
-            updateObj[i] = updates[i];
-          }
-        }
-        model.Model.findOneAndUpdate(obj, { $set: updateObj }, cb);
+        model.findOne(obj, function(err, obj) {
+          if (err) return cb (err);
+          model.updateInstance(obj, updates, cb);
+        });
       };
       model.delete = function(params, cb) {
         model.Model.remove(params, cb);

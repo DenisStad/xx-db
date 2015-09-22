@@ -1,32 +1,30 @@
-var setup = require('../convert');
 var should = require('should');
+var async = require('async');
 
-var App = {
-  models: {
-    testModel: {
-      definition: {
-        string: { type: 'string' },
-        stringLen: { type: 'string 123' },
-        text: { type: 'text' },
-        number: { type: 'number' },
-        integer: { type: 'integer' },
-        date: { type: 'date' },
-        bool: { type: 'boolean' },
-        now: { type: 'now' },
-        blob: { type: 'blob' },
-        enum: { type: 'enum a b c d ' },
+var App = require('xerxes')();
 
-        req: { type: 'string', required: true },
-        nreq: { type: 'string', required: false },
-        dreq: { type: 'string' },
+App.models.testModel = {
+  definition: {
+    string: { type: 'string', required: false },
+    stringLen: { type: 'string 123', required: false},
+    text: { type: 'text', required: false},
+    number: { type: 'number', required: false },
+    integer: { type: 'integer', required: false },
+    date: { type: 'date', required: false },
+    bool: { type: 'boolean', required: false },
+    now: { type: 'now', required: false },
+    blob: { type: 'blob', required: false },
+    enum: { type: 'enum a b c d ', required: false },
 
-        minmax: { type: 'number', min: -3, max: 5.4 },
-      }
-    }
+    req: { type: 'string', required: true },
+    nreq: { type: 'string', required: false },
+    dreq: { type: 'string' },
+
+    minmax: { type: 'number', min: -3, max: 5.4, required: false },
   }
 };
 
-setup(App, 'mongoose');
+var setup = App.load('../convert', 'mongoose');
 
 App.models.testModel.mongooseSchema.should.be.ok();
 
@@ -57,95 +55,117 @@ schema.minmax.type.should.equal(Number);
 schema.minmax.min.should.equal(-3);
 schema.minmax.max.should.equal(5.4);
 
+App.load('xx-mongoose/connect', 'mongodb://localhost/xxmongoose');
+App.load('xx-mongoose/model');
+
+var context = {};
+async.series([
+  function(cb) {
+    App.models.testModel.delete({ }, function(err, obj) {
+      if (err) return cb(err);
+      cb();
+    });
+  },
+  function(cb) {
+    App.models.testModel.create({ string: 'aa', req: 'r', dreq: 'r' }, function(err, obj) {
+      if (err) return cb(err);
+      obj.string.should.equal('aa');
+      obj.id.should.be.ok();
+      context.obj = obj;
+      cb();
+    });
+  },
+  function(cb) {
+    App.models.testModel.find({ string: 'aa' }, function(err, obj) {
+      if (err) return cb(err);
+      obj.length.should.equal(1);
+      obj[0].string.should.equal('aa');
+      obj[0].id.should.be.ok();
+      obj[0].id.should.equal(context.obj.id);
+      cb();
+    });
+  },
+  function(cb) {
+    App.models.testModel.findById(context.obj.id, function(err, obj) {
+      if (err) return cb(err);
+      obj.string.should.equal('aa');
+      obj.id.should.be.ok();
+      obj.id.should.equal(context.obj.id);
+      cb();
+    });
+  },
+  function(cb) {
+    App.models.testModel.findOne({ string: 'aa' }, function(err, obj) {
+      if (err) return cb(err);
+      obj.string.should.equal('aa');
+      obj.id.should.be.ok();
+      obj.id.should.equal(context.obj.id);
+      cb();
+    });
+  },
+  function(cb) {
+    App.models.testModel.updateInstance(context.obj, { string: 'bb' }, function(err, obj) {
+      if (err) return cb(err);
+      obj.string.should.equal('bb');
+      obj.id.should.be.ok();
+      obj.id.should.equal(context.obj.id);
+      cb();
+    });
+  },
+  function(cb) {
+    App.models.testModel.findByIdAndUpdate(context.obj.id, { string: 'cc' }, function(err, obj) {
+      if (err) return cb(err);
+      obj.string.should.equal('cc');
+      obj.id.should.be.ok();
+      obj.id.should.equal(context.obj.id);
+      cb();
+    });
+  },
+  function(cb) {
+    App.models.testModel.findOneAndUpdate({ string: 'cc' }, { string: 'dd' }, function(err, obj) {
+      if (err) return cb(err);
+      obj.string.should.equal('dd');
+      obj.id.should.be.ok();
+      obj.id.should.equal(context.obj.id);
+      cb();
+    });
+  },
+  function(cb) {
+    App.models.testModel.deleteInstance(context.obj, function(err) {
+      if (err) return cb(err);
+      App.models.testModel.find({ }, function(err, obj) {
+        if (err) return cb(err);
+        obj.length.should.equal(0);
+        cb();
+      });
+    });
+  },
+  function(cb) {
+    App.models.testModel.findById('32', function(err) {
+      if (err) return cb(err);
+      //shouldn't throw error
+      cb();
+    });
+  },
+], function(err) {
+  if (err) throw err;
+  process.exit();
+});
 
 //we're mimicking the mongoose methods here
-App.models.testModel.Model = {
-  findById: function(id, cb) {
-    cb(null, id);
-  },
-  findOne: function(params, cb) {
-    cb(null, params);
-  },
-  find: function(params, cb) {
-    cb(null, params);
-  },
-  create: function(obj, cb) {
-    cb(null, obj);
-  },
-  /*
-  update: function(params, updates, cb) {
-    cb(null, { params: params, updates: updates });
-  },
-  */
-  findOneAndUpdate: function(params, updates, cb) {
-    cb(null, { params: params, updates: updates });
-  },
-  findByIdAndUpdate: function(id, updates, cb) {
-    cb(null, { id: id, updates: updates });
-  },
-  remove: function(params, cb) {
-    cb(null, params);
-  },
-};
 
-var called = false;
-App.models.testModel.findById('id123', function(err, obj) {
-  obj.should.equal('id123');
-  called = true;
-});
-called.should.equal(true);
-called = false;
-App.models.testModel.findOne({ name: 'aa' }, function(err, obj) {
-  obj.name.should.equal('aa');
-  called = true;
-});
-called.should.equal(true);
-called = false;
-App.models.testModel.find({ name: 'aa' }, function(err, obj) {
-  obj.name.should.equal('aa');
-  called = true;
-});
-called.should.equal(true);
-called = false;
-App.models.testModel.create({ name: 'aa' }, function(err, obj) {
-  obj.name.should.equal('aa');
-  called = true;
-});
-called.should.equal(true);
 /*
-called = false;
-App.models.testModel.update({ name: 'aa' }, { name: 'bb' }, function(err, obj) {
-  obj.params.name.should.equal('aa');
-  obj.updates.$set.name.should.equal('bb');
-  called = true;
-});
-called.should.equal(true);
-*/
-called = false;
-App.models.testModel.findByIdAndUpdate('aa', { name: 'bb' }, function(err, obj) {
-  obj.id.should.equal('aa');
-  obj.updates.$set.name.should.equal('bb');
-  called = true;
-});
-called.should.equal(true);
-called = false;
-App.models.testModel.findOneAndUpdate({ name: 'aa'}, { name: 'bb' }, function(err, obj) {
-  obj.params.name.should.equal('aa');
-  obj.updates.$set.name.should.equal('bb');
-  called = true;
-});
-called.should.equal(true);
-called = false;
 App.models.testModel.delete({ name: 'aa'}, function(err, obj) {
   obj.name.should.equal('aa');
   called = true;
 });
 called.should.equal(true);
+*/
 
 
 
-
-setup(App, 'sequelize');
+/*
+App.load()(App, 'sequelize');
 
 App.models.testModel.sequelizeSchema.should.be.ok();
 
@@ -177,4 +197,4 @@ schema.minmax.validate.min.should.equal(-3);
 schema.minmax.validate.max.should.equal(5.4);
 
 
-console.log("All tests passed");
+*/

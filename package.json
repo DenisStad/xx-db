@@ -1,6 +1,6 @@
 {
   "name": "xx-db",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "description": "Database SCRUD wrapper for xerxes",
   "author": "Denis Stadniczuk",
   "license": "ISC",
@@ -16,9 +16,12 @@
     "test": "node test/test.js"
   },
   "devDependencies": {
+    "async": "^1.4.2",
     "mongoose": "^4.1.8",
     "sequelize": "^3.9.0",
-    "should": "^7.1.0"
+    "should": "^7.1.0",
+    "xerxes": "0.0.9",
+    "xx-mongoose": "^1.0.6"
   },
   "repository": {
     "type": "git",
