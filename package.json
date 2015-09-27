@@ -1,6 +1,6 @@
 {
   "name": "xx-db",
-  "version": "2.0.2",
+  "version": "2.0.3",
   "description": "Database SCRUD wrapper for xerxes",
   "author": "Denis Stadniczuk",
   "license": "ISC",
